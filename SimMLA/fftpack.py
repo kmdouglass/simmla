@@ -1,3 +1,4 @@
+import numpy           as np
 from scipy.fftpack     import fft2
 from scipy.fftpack     import fftshift
 from scipy.interpolate import RectBivariateSpline
