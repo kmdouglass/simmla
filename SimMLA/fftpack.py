@@ -1,19 +1,81 @@
 import numpy           as np
+from scipy.fftpack     import fft
 from scipy.fftpack     import fft2
 from scipy.fftpack     import fftshift
+from scipy.interpolate import interp1d
 from scipy.interpolate import RectBivariateSpline
 
 def fftSubgrid(uIn, grid):
-    '''Computes the 2D FFT of individual subgrids.
+    '''Computes the 1D FFT of individual subgrids.
     
-    fftSubgrid computes the 2D fast Fourier transform of a discretized field in
+    fftSubgrid computes the 1D fast Fourier transform of a discretized field in
     each subgrid of a GridArray. This function models the field in the focal plane
     of a single lenslet array using scalar diffraction theory.
         
     Parameters
     ----------
     uIn  : function
-        A 2D, real or complex valued function defining an input field distribution.
+        A 1D, real or complex valued function defining an input field
+        distribution.
+    grid : GridArray
+        The grid array for sampling the field.
+    
+    Returns
+    -------
+    interpMag   : array of scipy.interpolate.RectBivariateSpline
+    interpPhase : array of scipy.interpolate.RectBivariateSpline
+    '''
+    # Create arrays to hold the interpolations
+    interpMag   = []
+    interpPhase = []
+    
+    for subgridX in range(grid.numSubgrids):
+        # Sample the field at the grid's real locations
+        fieldSample = grid.rect(uIn, subgridX)
+
+        # Shift the sample to the center of the coordinate system
+        shiftX      = int(grid.subgridCenters[subgridX])
+        fieldSample = np.roll(fieldSample, -shiftX)
+
+        # Compute the Fourier transform with appropriate scaling to conserve energy
+        scalingFactor = (grid.physicalSize / (grid.gridSize - 1)) \
+                      / np.sqrt(grid.wavelength * grid.focalLength)
+        F             = scalingFactor * fftshift(fft(fftshift(fieldSample)))
+
+        # Shift the grid coordinates back to the original location
+        newGridX = grid.pX + (shiftX * grid.physicalSize / grid.gridSize)
+
+        # Find the transform's magnitude and phase for interpolation
+        mag   = np.abs(F)
+        phase = np.angle(F)
+        
+        '''MUST REDO INTERPOLATION FOR 1D'''
+        # Interpolate the transform
+        interpMag.append(interp1d(newGridX,
+                                  mag,
+                                  kind         = 'linear',
+                                  bounds_error = False,
+                                  fill_value   = 0.0))
+        interpPhase.append(interp1d(newGridX,
+                                  phase,
+                                  kind         = 'linear',
+                                  bounds_error = False,
+                                  fill_value   = 0.0))           
+            
+    return interpMag, interpPhase
+
+def fft2Subgrid(uIn, grid):
+    '''Computes the 2D FFT of individual subgrids.
+    
+    fft2Subgrid computes the 2D fast Fourier transform of a discretized field in
+    each subgrid of a GridArray. This function models the field in the focal plane
+    of a single lenslet array using scalar diffraction theory.
+        
+    Parameters
+    ----------
+    uIn  : function
+        A 2D, real or complex valued function defining an input field
+        distribution.
     grid : GridArray
         The grid array for sampling the field.
     

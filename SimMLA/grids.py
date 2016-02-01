@@ -5,11 +5,14 @@ def isEven(x):
     return (x % 2 == 0)
     
 # Class definitions
+class ImproperDimensionException(Exception):
+    pass    
+
 class ImproperGridSizeException(Exception):
     pass
 
 class Grid(object):
-    def __init__(self, gridSize, physicalSize, wavelength, focalLength):
+    def __init__(self, gridSize, physicalSize, wavelength, focalLength, dim = 2):
         '''Establishes a square grid for sampling an electromagnetic field.
         
         The grid is square with an odd number of grid locations along one
@@ -31,6 +34,8 @@ class Grid(object):
         focalLength  : float
             The focal length of the lens used to compute units of
             the Fourier transform.
+        dim          : int
+            The dimension of the grid (can be 1 or 2).
             
         '''
         if (not isinstance(gridSize, int)) or isEven(gridSize) or (gridSize <= 0):
@@ -44,7 +49,12 @@ class Grid(object):
         coords = np.arange(-np.floor(gridSize / 2), (np.floor(gridSize / 2)) + 1)
         
         # Create the grid
-        self.x, self.y = np.meshgrid(coords, coords)
+        if dim == 2:
+            self.x, self.y = np.meshgrid(coords, coords)
+        elif dim == 1:
+            self.x = coords
+        else:
+            raise ImproperDimensionException('dim must be an integer equal to 1 or 2.')
         
         # Setup the conversion factors
         self._gridToPhys         = self.physicalSize / (self.gridSize - 1)
@@ -102,7 +112,7 @@ class GridArray(Grid):
     by managing the placement of the subgrids on a fixed coordinate system.
     
     '''
-    def __init__(self, numSubgrids, subgridSize, physicalSize, wavelength, focalLength):
+    def __init__(self, numSubgrids, subgridSize, physicalSize, wavelength, focalLength, dim = 2):
         '''Builds an array of grids all lying on a common coordinate system.
         
         Parameters
@@ -117,6 +127,8 @@ class GridArray(Grid):
             The wavelength of the light for computing the grid of the Fourier transform.
         focalLength : float
             The focal length of the lens for computing the grid of the Fourier transform.
+        dim          : int
+            The dimension of the grid (can be 1 or 2).
        
         ''' 
         if (not isinstance(numSubgrids, int)) or isEven(numSubgrids) or (numSubgrids <= 0):
@@ -130,14 +142,42 @@ class GridArray(Grid):
         
         # Build the common coordinate system
         gridSize = numSubgrids * subgridSize
-        super(GridArray, self).__init__(gridSize, physicalSize, wavelength, focalLength)
+        super(GridArray, self).__init__(gridSize, physicalSize, wavelength, focalLength, dim = dim)
         
         # Set the centers of the subgrids
         self.subgridCenters = subgridSize * np.arange(-np.floor(numSubgrids / 2), np.floor(numSubgrids / 2) + 1)
         self.subgridx, self.subgridy = np.meshgrid(self.subgridCenters, self.subgridCenters)
+        
+    def rect(self, fieldIn, xInd):
+        '''Samples an input 1D field on the given subgrid.
+        
+        Parameters
+        ----------
+        fieldIn : function
+            A 2D, real or complex valued function defining an input field distribution.
+        xInd    : int
+            x-index (column) of the subgrid.
+        
+        Returns
+        -------
+        fieldSample : 1D array of complex
+            The input field on the given subgrid.
+            
+        '''
+        xCenter = self.subgridCenters[xInd]
+        
+        # Sample the field onto the grid
+        fieldSample = fieldIn(self.px)
+        
+        # Create a mask centered on the specified subgrid
+        sgHalfSize = np.floor(self.subgridSize / 2)
+        mask       = np.logical_and(self.x >= (xCenter - sgHalfSize), (self.x <= xCenter + sgHalfSize))
+
+        # Return the sampled and masked field
+        return fieldSample * mask.astype(int)
     
-    def rect(self, fieldIn, xInd, yInd):
-        '''Samples an input field at the given subgrid.
+    def rect2(self, fieldIn, xInd, yInd):
+        '''Samples an input 2D field at the given subgrid.
         
         Parameters
         ----------
