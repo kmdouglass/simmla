@@ -49,7 +49,6 @@ def fftSubgrid(uIn, grid):
         mag   = np.abs(F)
         phase = np.angle(F)
         
-        '''MUST REDO INTERPOLATION FOR 1D'''
         # Interpolate the transform
         interpMag.append(interp1d(newGridX,
                                   mag,
@@ -99,8 +98,9 @@ def fft2Subgrid(uIn, grid):
             fieldSample    = np.roll(np.roll(fieldSample, -shiftX, axis=1), -shiftY, axis = 0)
 
             # Compute the Fourier transform with appropriate scaling to conserve energy
-            scalingFactor = ((grid.physicalSize / (grid.gridSize - 1)) ** 2) / (grid.wavelength * grid.focalLength)
-            F             = scalingFactor * fftshift(fft2(fieldSample))
+            scalingFactor = ((grid.physicalSize / (grid.gridSize - 1)) ** 2) \
+                          / (grid.wavelength * grid.focalLength)
+            F             = scalingFactor * fftshift(fft2(fftshift(fieldSample)))
 
             # Shift the grid coordinates back to the original location
             newGridX = grid.pX + (shiftX * grid.physicalSize / grid.gridSize)
