@@ -105,6 +105,22 @@ class Grid(object):
         '''
         return self.y * self.wavelength * self.focalLength * self._gridToPhysFTGrid
         
+    @property
+    def pfX(self):
+        '''Return the X-grid of the Fourier transform in spatial frequencies.
+        
+        This is spatial frequency fx = x' / (wavelength * focalLength).
+        '''
+        return self.x * self._gridToPhysFTGrid
+    
+    @property
+    def pfY(self):
+        '''Return the X-grid of the Fourier transform in spatial frequencies.
+        
+        This is spatial frequency fy = y' / (wavelength * focalLength).
+        '''
+        return self.y * self._gridToPhysFTGrid
+        
 class GridArray(Grid):
     '''An array of grids on a fixed coordinate system.
     

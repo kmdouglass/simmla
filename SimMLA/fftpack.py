@@ -1,7 +1,6 @@
 import numpy           as np
-from scipy.fftpack     import fft
-from scipy.fftpack     import fft2
-from scipy.fftpack     import fftshift
+from scipy.fftpack     import fft, fft2, ifft
+from scipy.fftpack     import fftshift, ifftshift
 from scipy.interpolate import interp1d
 from scipy.interpolate import RectBivariateSpline
 
@@ -40,7 +39,7 @@ def fftSubgrid(uIn, grid):
         # Compute the Fourier transform with appropriate scaling to conserve energy
         scalingFactor = (grid.physicalSize / (grid.gridSize - 1)) \
                       / np.sqrt(grid.wavelength * grid.focalLength)
-        F             = scalingFactor * fftshift(fft(fftshift(fieldSample)))
+        F             = scalingFactor * fftshift(fft(ifftshift(fieldSample)))
 
         # Shift the grid coordinates back to the original location
         newGridX = grid.pX + (shiftX * grid.physicalSize / grid.gridSize)
@@ -56,10 +55,10 @@ def fftSubgrid(uIn, grid):
                                   bounds_error = False,
                                   fill_value   = 0.0))
         interpPhase.append(interp1d(newGridX,
-                                  phase,
-                                  kind         = 'linear',
-                                  bounds_error = False,
-                                  fill_value   = 0.0))           
+                                    phase,
+                                    kind         = 'linear',
+                                    bounds_error = False,
+                                    fill_value   = 0.0))           
             
     return interpMag, interpPhase
 
@@ -100,7 +99,7 @@ def fft2Subgrid(uIn, grid):
             # Compute the Fourier transform with appropriate scaling to conserve energy
             scalingFactor = ((grid.physicalSize / (grid.gridSize - 1)) ** 2) \
                           / (grid.wavelength * grid.focalLength)
-            F             = scalingFactor * fftshift(fft2(fftshift(fieldSample)))
+            F             = scalingFactor * fftshift(fft2(ifftshift(fieldSample)))
 
             # Shift the grid coordinates back to the original location
             newGridX = grid.pX + (shiftX * grid.physicalSize / grid.gridSize)
@@ -120,3 +119,38 @@ def fft2Subgrid(uIn, grid):
             interpPhase.append(RectBivariateSpline(yy, xx, phase))
     
     return interpMag, interpPhase
+    
+def fftPropagate(field, grid, propDistance):
+    '''Propagates a sampled 1D field along the optical axis.
+    
+    fftPropagate propagates a sampled 1D field a distance L by computing the
+    field's angular spectrum, multiplying each spectral component by the
+    propagation kernel exp(j * 2 * pi * fx * L / wavelength), and then
+    recomibining the propagated spectral components. The angular spectrum is
+    computed using a FFT.
+    
+    Parameters
+    ----------
+    field        : 1D array of complex
+        The sampled field to propagate.
+    grid         : Grid
+        The grid on which the sampled field lies.
+    propDistance : float
+        The distance to propagate the field in the same physical units as the
+        grid.
+    
+    '''
+    scalingFactor = (grid.physicalSize / (grid.gridSize - 1))
+    F             = scalingFactor * fftshift(fft(ifftshift(field)))
+    
+    # Compute the z-component of the wavevector
+    # Adding 0j ensures that numpy.sqrt returns complex numbers
+    kz = 2 * np.pi * np.sqrt(1 - grid.pfX**2 + 0j) / grid.wavelength
+    
+    # Propagate the field's spectral components
+    Fprop = F * np.exp(1j * kz * propDistance)
+    
+    # Recombine the spectral components
+    fieldProp = fftshift(ifft(ifftshift(Fprop))) / scalingFactor
+    
+    return fieldProp
