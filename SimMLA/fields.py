@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.fft import fft, fftshift, ifft, ifftshift
 
 class Gaussian1D():
     '''A perfectly coherent, 1D Gaussian beam.
@@ -16,11 +17,17 @@ class Gaussian1D():
         beamStd : float
             The beam width parameter (standard deviation).
         partiallyCoherent  : bool
-        GSMCoherenceLength : 500
+        
+        Notes
+        -----
+        Partially coherent beam simulation from Xifeng Xiao and David Voelz,
+        "Wave optics simulation approach for partial spatially coherent beams."
+        Opt. Express 14, 6986-6992 (2006)
             
         '''
-        self.power   = power
-        self.beamStd = beamStd
+        self.power             = power
+        self.beamStd           = beamStd
+        self.partiallyCoherent = partiallyCoherent
         
     def __call__(self):
         '''Returns one realization of the beam.
@@ -61,13 +68,23 @@ class Gaussian1D():
         '''Computes the random phase mask at the grid locations.
         
         '''
-        # Spatial sampling rate
-        dx = x[1] - x[0]
-        
+
         # Define phase screen functions
+        dx = x[1] - x[0] # Assumes uniform spacing between samples
+        sigma_f = 10 * cohLength / np.sqrt(2)
+        sigma_r = 20 * np.sqrt(np.pi) * sigma_f
         
+        f = 1 / np.sqrt(2 * np.pi) / sigma_f * np.exp(-x**2 / 2 / sigma_f**2)
+        r = sigma_r * np.sqrt(12) * np.random.rand(x.size)
+
         # Convolve phase screen functions
+        F = dx * fft(ifftshift(f))
+        R = dx * fft(ifftshift(r))
+        
+        phaseScreen = fftshift(ifft(F * R)) / dx
         
         # Sample the field
+        fieldFunc = self._returnBeamProfile()
+        field = fieldFunc(x) * np.exp(1j * phaseScreen)
         
-        # Multiply the sampled field by the phase screen
+        return field
