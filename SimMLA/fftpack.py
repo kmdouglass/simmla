@@ -4,7 +4,7 @@ from scipy.fftpack     import fftshift, ifftshift
 from scipy.interpolate import interp1d
 from scipy.interpolate import RectBivariateSpline
 
-def fftSubgrid(uIn, grid):
+def fftSubgrid(uIn, grid, clip = True):
     '''Computes the 1D FFT of individual subgrids.
     
     fftSubgrid computes the 1D fast Fourier transform of a discretized field in
@@ -18,6 +18,11 @@ def fftSubgrid(uIn, grid):
         distribution.
     grid : GridArray
         The grid array for sampling the field.
+    clip : bool
+        Should the field be clipped in size to the same extent as the initial
+        lens aperture? Setting this to False will sample the transformed field
+        across the entire computational grid. Setting it to True sets the field
+        outside of the aperture to zero.
     
     Returns
     -------
@@ -40,6 +45,9 @@ def fftSubgrid(uIn, grid):
         scalingFactor = (grid.physicalSize / (grid.gridSize - 1)) \
                       / np.sqrt(grid.wavelength * grid.focalLength)
         F             = scalingFactor * fftshift(fft(ifftshift(fieldSample)))
+        
+        # Set the field to zero outside of the extent of a single subgrid
+        F[np.logical_or(grid.x < -np.floor(grid.subgridSize / 2), grid.x > np.floor(grid.subgridSize / 2))] = 0
 
         # Shift the grid coordinates back to the original location
         newGridX = grid.pX + (shiftX * grid.physicalSize / grid.gridSize)
@@ -49,14 +57,17 @@ def fftSubgrid(uIn, grid):
         phase = np.angle(F)
         
         # Interpolate the transform
+        # kind = 'linear' SHOULD NOT BE USED. This is because it will introduce
+        # artifacts when the phase jumps from zero to +/- pi by interpolating
+        # between the jumps.
         interpMag.append(interp1d(newGridX,
                                   mag,
-                                  kind         = 'linear',
+                                  kind         = 'nearest',
                                   bounds_error = False,
                                   fill_value   = 0.0))
         interpPhase.append(interp1d(newGridX,
                                     phase,
-                                    kind         = 'linear',
+                                    kind         = 'nearest',
                                     bounds_error = False,
                                     fill_value   = 0.0))           
             
