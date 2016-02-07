@@ -128,7 +128,7 @@ class GridArray(Grid):
     by managing the placement of the subgrids on a fixed coordinate system.
     
     '''
-    def __init__(self, numSubgrids, subgridSize, physicalSize, wavelength, focalLength, dim = 2):
+    def __init__(self, numSubgrids, subgridSize, physicalSize, wavelength, focalLength, dim = 2, zeroPad = 3):
         '''Builds an array of grids all lying on a common coordinate system.
         
         Parameters
@@ -145,6 +145,11 @@ class GridArray(Grid):
             The focal length of the lens for computing the grid of the Fourier transform.
         dim          : int
             The dimension of the grid (can be 1 or 2).
+        zeroPad      : int (odd)
+            The size of the grid will be increased beyond the set bounds by
+            this factor. For example, if the physical size of the grid was set
+            to 1 mm, the actual simulation grid will be 5 mm, with 2 mm worth
+            of zeros on both sides of the subgrid.
        
         ''' 
         if (not isinstance(numSubgrids, int)) or isEven(numSubgrids) or (numSubgrids <= 0):
@@ -157,10 +162,11 @@ class GridArray(Grid):
         self.subgridSize = subgridSize    
         
         # Build the common coordinate system
-        gridSize = numSubgrids * subgridSize
-        super(GridArray, self).__init__(gridSize, physicalSize, wavelength, focalLength, dim = dim)
+        gridSize = zeroPad * numSubgrids * subgridSize
+        super(GridArray, self).__init__(gridSize, zeroPad * physicalSize, wavelength, focalLength, dim = dim)
         
-        # Set the centers of the subgrids
+        # Set the centers of the subgrids. They will only exist in the
+        # non-zeropadded regions
         self.subgridCenters = subgridSize * np.arange(-np.floor(numSubgrids / 2), np.floor(numSubgrids / 2) + 1)
         self.subgridx, self.subgridy = np.meshgrid(self.subgridCenters, self.subgridCenters)
         
