@@ -62,7 +62,7 @@ def _applyMask(x, amplitude, beamStd, cohLength, dpfX, pfX):
       
     
     #phaseScreen = fftshift(ifft(F * R)) * sigma_r / dx / np.sqrt(dpfX)
-    phaseScreen = 0.01 * fftshift(ifft(F * R)) * sigma_r * dpfX * x.size / np.sqrt(dpfX)
+    phaseScreen = 0.042 * fftshift(ifft(F * R)) * sigma_r * dpfX * x.size / np.sqrt(dpfX)
     
     # Sample the field
     fieldFunc = GaussianBeamWaistProfile(amplitude, beamStd)
