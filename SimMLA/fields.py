@@ -61,8 +61,9 @@ def _applyMask(x, amplitude, beamStd, cohLength, dpfX, pfX):
     R = np.random.randn(x.size) + 1j * np.random.randn(x.size)
       
     
+    # Magic number 0.041 came from an empirical calibration routine.
     #phaseScreen = fftshift(ifft(F * R)) * sigma_r / dx / np.sqrt(dpfX)
-    phaseScreen = 0.042 * fftshift(ifft(F * R)) * sigma_r * dpfX * x.size / np.sqrt(dpfX)
+    phaseScreen = 0.041 * fftshift(ifft(F * R)) * sigma_r * dpfX * x.size / np.sqrt(dpfX)
     
     # Sample the field
     fieldFunc = GaussianBeamWaistProfile(amplitude, beamStd)
