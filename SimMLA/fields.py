@@ -31,33 +31,41 @@ def GaussianBeamWaistProfile(amplitude, beamStd):
     
     return profile
 
-def GSMBeamRealization(amplitude, beamStd, cohLength):
+def GSMBeamRealization(amplitude, beamStd, cohLength, grid):
     '''Returns a single realization of the partially coherent GSM beam.
     
     '''
-    return lambda x: _applyMask(x, amplitude, beamStd, cohLength)
+    # The spatial frequency grid spacing is required for normalizing the random
+    # array of the phase screen.
+    
+    #dpX = grid.pX[1] - grid.pX[0]
+    dpfX = grid.pfX[1] - grid.pfX[0]
+    
+    return lambda x: _applyMask(x, amplitude, beamStd, cohLength, dpfX, grid.pfX)
         
-def _applyMask(x, amplitude, beamStd, cohLength):
+def _applyMask(x, amplitude, beamStd, cohLength, dpfX, pfX):
     '''Computes the random phase mask at the grid locations.
     
     '''
 
     # Define phase screen functions
     dx = x[1] - x[0] # Assumes uniform spacing between samples
-    sigma_f = 10 * cohLength / np.sqrt(2)
-    sigma_r = 20 * np.sqrt(np.pi) * sigma_f
+    sigma_f = 2.5 * cohLength
+    sigma_r = np.sqrt(4 * np.pi * sigma_f**4 / cohLength**2)
     
-    f = 1 / np.sqrt(2 * np.pi) / sigma_f * np.exp(-x**2 / 2 / sigma_f**2)
-    r = sigma_r * np.sqrt(12) * np.random.rand(x.size)
+    #f = 1 / np.sqrt(np.pi) / sigma_f * np.exp(-x**2 / sigma_f**2)
 
     # Convolve phase screen functions
-    F = dx * fft(ifftshift(f))
-    R = dx * fft(ifftshift(r))
+    # F = dx * fft(ifftshift(f))
+    F = ifftshift(np.exp(-np.pi**2 * sigma_f**2 * pfX**2));
+    R = np.random.randn(x.size) + 1j * np.random.randn(x.size)
+      
     
-    phaseScreen = fftshift(ifft(F * R)) / dx
+    #phaseScreen = fftshift(ifft(F * R)) * sigma_r / dx / np.sqrt(dpfX)
+    phaseScreen = 0.01 * fftshift(ifft(F * R)) * sigma_r * dpfX * x.size / np.sqrt(dpfX)
     
     # Sample the field
     fieldFunc = GaussianBeamWaistProfile(amplitude, beamStd)
-    field = fieldFunc(x) * np.exp(1j * phaseScreen)
+    field = fieldFunc(x) * np.exp(1j * np.real(phaseScreen))
     
     return field
