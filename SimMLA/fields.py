@@ -50,23 +50,27 @@ def _applyMask(x, amplitude, beamStd, cohLength, dpfX, pfX):
 
     # Define phase screen functions
     dx = x[1] - x[0] # Assumes uniform spacing between samples
-    sigma_f = 5 * cohLength
+    sigma_f = 2.5 * cohLength
     sigma_r = np.sqrt(4 * np.pi * sigma_f**4 / cohLength**2)
+    
+    df = pfX[1] - pfX[0]
     
     #f = 1 / np.sqrt(np.pi) / sigma_f * np.exp(-x**2 / sigma_f**2)
 
     # Convolve phase screen functions
     # F = dx * fft(ifftshift(f))
     F = ifftshift(np.exp(-np.pi**2 * sigma_f**2 * pfX**2));
-    R = np.random.randn(x.size) + 1j * np.random.randn(x.size)
+    R = np.random.randn(x.size) + 1.0j * np.random.randn(x.size)
     
     # Magic number 0.041 came from an empirical calibration routine.
     #phaseScreen = fftshift(ifft(F * R)) * sigma_r / dx / np.sqrt(dpfX)
-    phaseScreen = 0.041 * fftshift(ifft(F * R)) * sigma_r * dpfX * x.size / np.sqrt(dpfX)
-    #phaseScreen = fftshift(ifft(F*R)) * 177245.39 / dx / np.sqrt(dpfX)
+    #phaseScreen = 0.041 * fftshift(ifft(F * R)) * sigma_r * dpfX * x.size / np.sqrt(dpfX)
+    phaseScreen = 2 * np.pi * fftshift(ifft(F*R)) * sigma_r / (dx * np.sqrt(dpfX))
     
     # Sample the field
     fieldFunc = GaussianBeamWaistProfile(amplitude, beamStd)
-    field = fieldFunc(x) * np.exp(1j * np.real(phaseScreen))
+    field = fieldFunc(x) * np.exp(1.0j * np.real(phaseScreen))
+    
+    #print('sigma_f: {0}, sigma_r: {1}, dx: {2}, dpfX: {3}, df: {4}, size x {5}, lc: {6}'.format(sigma_f, sigma_r, dx, dpfX, df, x.size, cohLength))
     
     return field
