@@ -31,6 +31,12 @@ def GaussianBeamWaistProfile(amplitude, beamStd):
     
     return profile
 
+def GaussianWithDiffuser(amplitude, beamStd):
+    '''A Gaussian beam passing through a telescope and rotating diffuser.
+    
+    '''
+    pass
+
 def GSMBeamRealization(amplitude, beamStd, cohLength, grid):
     '''Returns a single realization of the partially coherent GSM beam.
     

@@ -36,6 +36,9 @@ def fftSubgrid(uIn, grid, clip = True):
     for subgridX in range(grid.numSubgrids):
         # Sample the field at the grid's real locations
         fieldSample = grid.rect(uIn, subgridX)
+        
+        # Propagate the field to the MLA
+        # fftPropagate(fieldSample, grid, 200e-3)
 
         # Shift the sample to the center of the coordinate system
         shiftX      = int(grid.subgridCenters[subgridX])
