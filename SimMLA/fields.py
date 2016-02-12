@@ -31,12 +31,57 @@ def GaussianBeamWaistProfile(amplitude, beamStd):
     
     return profile
 
-def GaussianWithDiffuser(amplitude, beamStd):
+def GaussianWithDiffuser(amplitude,
+                         beamStd,
+                         physicalSize,
+                         powerScat  = 0.01,
+                         wavelength = 0.642,
+                         fc         = 50000,
+                         grainSize  = 40,
+                         beamSize   = 100):
     '''A Gaussian beam passing through a telescope and rotating diffuser.
     
-    '''
-    pass
+    Parameters
+    ----------
+    amplitude : float
+        The amplitude of the **input Gaussian beam**, i.e. before the diffuser.
+        The amplitude after the diffuser will be calculated from this.
+    powerScat : float
+        The fractional power scattered by the rotating diffuser. Must lie
+        between 0 and 1.
+    physicalSize  : float
+        The physical size of the grid that the plane waves are defined on.
+        This is used for power conservation.
+    fc        : float
+        The focal length of the collimating lens that collects the light coming
+        from the diffuser.
+        
+    ''' 
+    
+    # Setup the point sources that model the diffuser
+    numSources = np.ceil(beamSize / grainSize)
+    srcAmp     = amplitude * np.sqrt(powerScat / numSources * beamStd * np.sqrt(np.pi) / physicalSize)
+    srcCenters = np.arange(-numSources * grainSize / 2, numSources * (grainSize / 2) + grainSize, grainSize)
 
+    # Return the deterministic field and scattered plane waves
+    return lambda x: _applyDiffuser(x, amplitude, beamStd, srcAmp, srcCenters, powerScat, wavelength, fc)
+    
+def _applyDiffuser(x, amplitude, beamStd, srcAmp, srcCenters, powerScat, wavelength, fc):
+    '''Computes the random plane waves coming from the diffuser.
+    
+    '''
+    # Compute the plane waves' phases and directions
+    planewaves = np.zeros(x.size)
+    for ctr in range(int(srcCenters.size)):
+        randomPhase = np.exp(1j * ((np.random.rand(1) * 2 * np.pi) - np.pi))
+        planewaves  = planewaves + srcAmp * np.exp(1j * 2 * np.pi *srcCenters[ctr] * x / wavelength / fc) * randomPhase
+        
+    # Compute the carrier beam, i.e. the deterministic Gaussian
+    newCarrierAmp = amplitude * np.sqrt(1 - powerScat)
+    carrierBeam   = GaussianBeamWaistProfile(newCarrierAmp, beamStd)
+    
+    return carrierBeam(x) + planewaves
+    
 def GSMBeamRealization(amplitude, beamStd, cohLength, grid):
     '''Returns a single realization of the partially coherent GSM beam.
     
