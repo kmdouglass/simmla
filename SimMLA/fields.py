@@ -114,3 +114,31 @@ def _applyMask(x, amplitude, beamStd, cohLength, pfX):
     field = fieldFunc(x) * np.exp(1.0j * np.real(phaseScreen))
     
     return field
+    
+def diffuserMask(sigma_f, sigma_r, grid):
+    '''Returns a single realization of the partially coherent GSM beam.
+    
+    '''
+    # The spatial frequency grid spacing is required for normalizing the random
+    # array of the phase screen.
+    
+    return lambda x: _applyDiffuserMask(x, sigma_f, sigma_r, grid.pfX)
+        
+def _applyDiffuserMask(x, sigma_f, sigma_r, pfX):
+    '''Computes the random phase mask at the grid locations.
+    
+    '''
+    dx      = x[1] - x[0] # Assumes uniform spacing between samples
+    dpfX    = pfX[1] - pfX[0]
+
+    # Convolve phase screen functions
+    F = ifftshift(np.exp(-np.pi**2 * sigma_f**2 * pfX**2));
+    R = np.random.randn(x.size) + 1.0j * np.random.randn(x.size)
+    
+    # From Voelz, "Computational Fourier Optics: A MATLAB Tutorial", Chap. 9
+    phaseScreen = 2 * np.pi * fftshift(ifft(F*R)) * sigma_r / (dx * np.sqrt(dpfX))
+    
+    # Sample the field
+    mask = np.exp(1.0j * np.real(phaseScreen))
+    
+    return mask
