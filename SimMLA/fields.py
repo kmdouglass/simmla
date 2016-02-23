@@ -1,23 +1,6 @@
 import numpy as np
 from numpy.fft import fft, fftshift, ifft, ifftshift
 
-'''
-Parameters
-----------
-amplitude : float
-    The field amplitude carried by the Gaussian beam.
-beamStd  : float
-    The beam width parameter (standard deviation).
-partiallyCoherent  : bool
-
-Notes
------
-Partially coherent beam simulation from Xifeng Xiao and David Voelz,
-"Wave optics simulation approach for partial spatially coherent beams."
-Opt. Express 14, 6986-6992 (2006)
-    
-'''
-
 def GaussianBeamWaistProfile(amplitude, beamStd):
     '''
     Returns
@@ -30,6 +13,72 @@ def GaussianBeamWaistProfile(amplitude, beamStd):
     profile = np.vectorize(profile)
     
     return profile
+    
+def GaussianBeamDefocused(amplitude, beamStd, wavelength, position):
+    '''Returns the field from a Gaussian beam in an arbitrary plane.
+    
+    Parameters
+    ----------
+    amplitude  : float
+        The amplitude of the input Gaussian beam.
+    beamStd    : float
+        The standard deviation of the beam's waist. This is related to the
+        waist size through waist = sqrt(2) * beamStd.
+    wavelength : float
+    position   : float
+        The axial position of the observation plane relative to the waist.
+    
+    '''
+    # Compute the beam's waist from the standard deviation
+    waist      = np.sqrt(2) * beamStd
+    
+    wavenumber = 2 * np.pi / wavelength
+    
+    # Compute the beam radius, curvature, and Gouy phase
+    beamRad   = _wz(position, waist, wavelength)
+    beamRoc   = _roc(position, waist, wavelength)
+    gouyPhase = _gouyPhase(position, waist, wavelength)
+    
+    profile = lambda x: amplitude * np.sqrt(waist / beamRad) \
+                      * np.exp(-x**2 / beamRad**2)  \
+                      * np.exp(1j * wavenumber * position \
+                             + 1j * wavenumber * x**2 / 2 / beamRoc \
+                             - 1j * gouyPhase)
+    return profile
+
+def _wz(position, waist, wavelength):
+    '''Computes the beam's radius at an arbitrary axial position.
+    
+    '''
+    # Compute the Rayleigh range
+    zR = np.pi * waist**2 / wavelength
+    
+    wz = waist * np.sqrt(1 + (position / zR)**2)
+    return wz
+
+def _roc(position, waist, wavelength):
+    '''Computes the beam's radius of curvature at an arbitrary axial position.
+    
+    '''
+    # Compute the Rayleigh range
+    zR = np.pi * waist**2 / wavelength
+    
+    if position != 0:
+        roc = position * (1 + (zR / position)**2)
+    else:
+        roc = 0
+        
+    return roc
+    
+def _gouyPhase(position, waist, wavelength):
+    '''Computes the Gouy phase of the Gaussian beam.
+    
+    '''
+    # Compute the Rayleigh range
+    zR = np.pi * waist**2 / wavelength
+    
+    gouyPhase = np.arctan(position / zR)
+    return gouyPhase
 
 def GaussianWithDiffuser(amplitude,
                          beamStd,
@@ -126,6 +175,12 @@ def diffuserMask(sigma_f, sigma_r, grid):
         
 def _applyDiffuserMask(x, sigma_f, sigma_r, pfX):
     '''Computes the random phase mask at the grid locations.
+    
+    Notes
+    -----
+    Partially coherent beam simulation from Xifeng Xiao and David Voelz,
+    "Wave optics simulation approach for partial spatially coherent beams."
+    Opt. Express 14, 6986-6992 (2006)
     
     '''
     dx      = x[1] - x[0] # Assumes uniform spacing between samples
