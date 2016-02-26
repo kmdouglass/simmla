@@ -2,3 +2,4 @@
 SimMLA.egg-info/
 SimMLA/__pycache__/
 *~
+*.npy
