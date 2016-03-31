@@ -148,8 +148,9 @@ class GridArray(Grid):
         zeroPad      : int (odd)
             The size of the grid will be increased beyond the set bounds by
             this factor. For example, if the physical size of the grid was set
-            to 1 mm, the actual simulation grid will be 5 mm, with 2 mm worth
-            of zeros on both sides of the subgrid.
+            to 1 mm and zeropad was to 5, the actual simulation grid will be 5
+            times larger and the physical size will be 5 mm, with 2 mm worth of
+            zeros on both sides of the subgrid.
        
         ''' 
         if (not isinstance(numSubgrids, int)) or isEven(numSubgrids) or (numSubgrids <= 0):
