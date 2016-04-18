@@ -1,3 +1,7 @@
+# © All rights reserved. ECOLE POLYTECHNIQUE FEDERALE DE LAUSANNE, Switzerland,
+# Laboratory of Experimental Biophysics, 2016
+# See the LICENSE.docx file for more details.
+
 import numpy as np
 from numpy.fft import fft, fftshift, ifft, ifftshift
 
