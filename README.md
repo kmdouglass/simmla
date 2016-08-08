@@ -9,6 +9,11 @@ utilizing microlens arrays.
 Switzerland, Laboratory of Experimental Biophysics, 2016
 See the LICENSE.docx file for more details.
 
+## Authors
+
+- Kyle M. Douglass
+- Suliana Manley
+
 # Installation
 
 SimMLA uses Python 3.5 and a few scientific libraries associated with
@@ -26,6 +31,12 @@ folder containing the SimMLA directory. Enter the command
 `pip install -e SimMLA`
 
 to install SimMLA in development mode.
+
+In case there are dependency issues, you can try installing a conda
+environment known to work with SimMLA. To do this, navigate to the
+SimMLA parent directory and run the command
+
+`conda env create -f environment.yml`
 
 # Directions
 

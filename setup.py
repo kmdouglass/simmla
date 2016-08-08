@@ -10,7 +10,7 @@ config = {
     'url'              : 'https://douglass@git.epfl.ch/repo/simmla.git',
     'download_url'     : 'https://douglass@git.epfl.ch/repo/simmla.git',
     'author_email'     : 'kyle.douglass@epfl.ch',
-    'version'          : '0.1.0a',
+    'version'          : '0.0.0',
     'install_requires' : ['numpy',
                           'scipy',
                           'jupyter'],
