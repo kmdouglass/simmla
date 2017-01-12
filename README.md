@@ -1,18 +1,26 @@
 # SimMLA
 
 Fourier optics simulation code for super-resolution microscopes
-utilizing microlens arrays.
+utilizing dual microlens arrays.
 
 # License Information
 
 © All rights reserved. ECOLE POLYTECHNIQUE FEDERALE DE LAUSANNE,
-Switzerland, Laboratory of Experimental Biophysics, 2016
+Switzerland, Laboratory of Experimental Biophysics, 2016-2017
 See the LICENSE.docx file for more details.
 
-## Authors
+# Citing this Work
 
-- Kyle M. Douglass
-- Suliana Manley
+If you use SimMLA in your research, please cite the following paper in
+which this work was used:
+
+> K. M. Douglass, C. Sieben, A. Archetti, A. Lambert, and S. Manley, " Super-resolution imaging of multiple cells by optimized flat-field epi-illumination," Nature Photonics 10, 705-708, doi:10.1038/nphoton.2016.200 (2016)
+
+<a href="http://www.nature.com/nphoton/journal/v10/n11/full/nphoton.2016.200.html">http://www.nature.com/nphoton/journal/v10/n11/full/nphoton.2016.200.html</a>
+
+## Author
+
+- Kyle M. Douglass, kyle.m.douglass at gmail.com
 
 # Installation
 

@@ -3,3 +3,5 @@ SimMLA.egg-info/
 SimMLA/__pycache__/
 *~
 *.npy
+playground/
+tests/Rotating Diffuser Tests/
