@@ -108,7 +108,7 @@ def fft2Subgrid(uIn, grid):
         for subgridY in range(grid.numSubgrids):
     
             # Sample the field at the grid's real locations
-            fieldSample = grid.rect(uIn, subgridX, subgridY)
+            fieldSample = grid.rect2(uIn, subgridX, subgridY)
 
             # Shift the sample to the center of the coordinate system
             shiftX, shiftY = int(grid.subgridCenters[subgridX]), int(grid.subgridCenters[subgridY])
