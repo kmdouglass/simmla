@@ -3,6 +3,12 @@ try:
 except ImportError:
     from distutils.core import setup
 
+
+# Parse the requirements file
+with open("requirements.txt") as fh:
+    requirements = fh.read().splitlines()
+
+
 config = {
     'description'      : 'Fourier optics-based simulations for microlens arrays (MLAs)',
     'long_description' : 'SimMLA provides routines for simulating microlens arrays and flys eye condensers.',
@@ -10,10 +16,8 @@ config = {
     'url'              : 'https://douglass@git.epfl.ch/repo/simmla.git',
     'download_url'     : 'https://douglass@git.epfl.ch/repo/simmla.git',
     'author_email'     : 'kyle.douglass@epfl.ch',
-    'version'          : '0.0.0',
-    'install_requires' : ['numpy',
-                          'scipy',
-                          'jupyter'],
+    'version'          : '0.0.1',
+    'install_requires' : requirements,
     'packages'         : ['SimMLA'],
     'scripts'          : [],
     'name'             : 'SimMLA',
