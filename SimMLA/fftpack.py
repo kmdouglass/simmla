@@ -164,7 +164,7 @@ def fftPropagate(field, grid, propDistance):
     # Compute the z-component of the wavevector
     # Adding 0j ensures that numpy.sqrt returns complex numbers
     kz = 2 * np.pi * np.sqrt(1 - (grid.pfX * grid.wavelength)**2 + 0j) / grid.wavelength
-    
+    kz.imag=np.zeros(np.shape(kz)) 
     # Propagate the field's spectral components
     Fprop = F * np.exp(1j * kz * propDistance)
     
